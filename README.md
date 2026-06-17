@@ -1,312 +1,322 @@
-# 🤖 AI Grant & Trends Intelligence — GrantBot
+# AI Grant Trends Intelligence
 
-A LangChain-powered ReAct agent that discovers and evaluates **grants, tenders, fellowships, and funding opportunities** from across the web — covering Indian government schemes, international organizations, startup accelerators, research bodies, and more.
+An intelligent AI-powered agent system for researching, analyzing, and tracking AI grants and emerging trends in the AI funding landscape. This project combines agentic AI workflows with real-time trend analysis to provide actionable insights into grant opportunities and industry developments.
 
----
+## Overview
 
-## 🌟 Overview
+**AI Grant Trends Intelligence** is a multi-agent AI system designed to:
+- Autonomously research available AI grants and funding opportunities
+- Analyze emerging trends in AI research and development
+- Synthesize complex grant eligibility requirements and timelines
+- Maintain persistent conversation history for context-aware interactions
+- Provide intelligent recommendations and insights based on market data
 
-GrantBot is an intelligent conversational agent built using **LangChain**, **Chroma**, and **Groq (LLaMA 3.1)**. It ingests and indexes funding data from curated web sources, then answers natural language queries about grants with structured, verified, source-linked responses.
+This system leverages modern agentic AI frameworks to orchestrate multiple tools and data sources, enabling comprehensive grant intelligence gathering and trend analysis.
 
-> **Example query:** *"Find grants for early-stage Indian startups working on clean energy or sustainability."*
+## Features
 
-GrantBot will search its vector knowledge base, reason through the most relevant results using the ReAct framework, and return a structured breakdown of opportunities with eligibility, deadlines, amounts, and source links.
+✨ **Core Capabilities**
+- **Grant Discovery & Analysis**: Automated research of AI grants across multiple funding bodies
+- **Trend Intelligence**: Real-time analysis of emerging trends in AI research and funding
+- **Intelligent Agent Workflows**: Multi-step reasoning and tool orchestration for complex queries
+- **Chat History Management**: Persistent conversation tracking with SQLite for context retention
+- **Dynamic Prompting**: Flexible prompt engineering for specialized grant and trend analysis
+- **Environment Management**: Secure API key and configuration handling via `.env` files
 
----
+## Tech Stack
 
-## ✨ Features
+- **Language**: Python 3.x
+- **AI Framework**: LLM-based agents (LangGraph/CrewAI compatible)
+- **Database**: SQLite (for chat history and grant metadata)
+- **Configuration**: Python-dotenv for environment management
+- **Agent Orchestration**: Multi-step agentic workflows with tool integration
 
-- **Multi-category search** — government, international, startup, research, scholarship, conference, and education funding
-- **ReAct agent reasoning** — step-by-step Thought → Action → Observation loops before generating a final answer
-- **RAG pipeline** — web pages are scraped, chunked, embedded, and stored in a persistent Chroma vector store
-- **Persistent chat history** — conversations are saved to a local SQLite database for multi-turn context
-- **NVIDIA embeddings** — uses `nvidia/llama-nemotron-embed-1b-v2` for high-quality semantic search
-- **Structured output** — every result is formatted with Title, Source, Type, Eligibility, Amount, Deadline, Key Requirements, and Link
-- **Query classification & fallback** — classifies queries to pick the right tool; gracefully handles zero-result cases
-- **Condense question rewriting** — rewrites follow-up questions into standalone retrieval queries using chat history
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 AI-Grant---Trends-Intelligence/
-│
-├── Grant_agent.py        # Core agent: vectorstore builder, retrieval tools, agent factory
-├── run_grant_agent.py    # Runner: loads vectorstore and runs a sample agent query
-├── prompts.py            # Prompt templates (system, ReAct, RAG, classifier, proposal)
-├── ingest.py             # Command-line ingestion helper for new grant sources
-├── app.py                # Streamlit UI for GrantBot and proposal generation
-├── scheduler.py          # Refresh schedule for periodic re-ingestion
-├── grant_db/             # Persisted Chroma vector store
-├── chat_history.db       # SQLite conversation history (local only)
-├── requirements.txt      # Python dependencies
-├── .env.example          # Example environment variable template
-└── .env                  # API keys (GROQ_API_KEY, NVIDIA_API_KEY) local only
+├── Grant_agent.py          # Core grant research and analysis agent
+├── run_grant_agent.py      # Entry point and agent runner
+├── prompts.py              # Prompt templates for grant and trend analysis
+├── grant_db/               # Grant database and metadata storage
+├── chat_history.db         # SQLite database for conversation history
+├── .env                    # Environment variables (API keys, config)
+└── __pycache__/            # Python cache files
 ```
 
----
+### Key Components
 
-## 🏗️ Architecture
+| File | Purpose |
+|------|---------|
+| `Grant_agent.py` | Implements the core grant research agent with tool definitions and reasoning logic |
+| `run_grant_agent.py` | Main entry point; initializes and executes the agent with user queries |
+| `prompts.py` | System prompts and templates for grant research and trend analysis tasks |
+| `grant_db/` | Local database directory for storing grant data, metadata, and search results |
+| `chat_history.db` | SQLite database maintaining multi-turn conversation history for context |
+
+## Installation
+
+### Prerequisites
+- Python 3.8 or higher
+- pip package manager
+- Git
+
+### Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/masterharry9889/AI-Grant---Trends-Intelligence.git
+   cd AI-Grant---Trends-Intelligence
+   ```
+
+2. **Create a virtual environment** (recommended)
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
+   > **Note**: If `requirements.txt` is not present, install core dependencies:
+   > ```bash
+   > pip install python-dotenv langchain langchain-community langgraph anthropic
+   > ```
+
+4. **Configure environment variables**
+   Create a `.env` file in the project root:
+   ```env
+   ANTHROPIC_API_KEY=your_api_key_here
+   # Add other required API keys and configuration
+   ```
+
+## Usage
+
+### Running the Grant Research Agent
+
+```bash
+python run_grant_agent.py
+```
+
+This will start the agent and accept queries. Example interactions:
+
+```
+Query: What are the latest AI research grants available in 2025?
+Query: Analyze trends in NLP funding across government and private sectors
+Query: Find grants for sustainable AI projects
+```
+
+### Basic Agent Workflow
+
+```python
+from Grant_agent import create_grant_agent
+
+# Initialize the agent
+agent = create_grant_agent()
+
+# Run a query
+response = agent.run("What are emerging trends in AI grant funding?")
+print(response)
+```
+
+### Accessing Chat History
+
+The agent maintains conversation history in `chat_history.db`:
+
+```python
+import sqlite3
+
+conn = sqlite3.connect('chat_history.db')
+cursor = conn.cursor()
+cursor.execute("SELECT * FROM chat_history ORDER BY timestamp DESC LIMIT 10")
+for row in cursor.fetchall():
+    print(row)
+conn.close()
+```
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file with the following structure:
+
+```env
+# API Configuration
+ANTHROPIC_API_KEY=your_anthropic_key
+# Add additional API keys as needed for external grant databases
+
+# Database Configuration
+GRANT_DB_PATH=./grant_db
+CHAT_HISTORY_DB=./chat_history.db
+
+# Agent Configuration
+MAX_ITERATIONS=10
+TEMPERATURE=0.7
+```
+
+### Custom Prompts
+
+Modify `prompts.py` to customize agent behavior:
+
+```python
+GRANT_RESEARCH_PROMPT = """
+You are an expert grant researcher specializing in AI funding opportunities.
+Your task is to:
+1. Identify relevant grants based on criteria
+2. Analyze eligibility requirements
+3. Synthesize trends across funding bodies
+...
+"""
+```
+
+## Architecture
+
+### Multi-Agent Workflow
 
 ```
 User Query
+    ↓
+Query Router Agent
+    ├→ Grant Research Agent
+    │   ├→ Web Search Tool
+    │   ├→ Grant Database Tool
+    │   └→ Analysis Tool
     │
-    ▼
-CONDENSE_QUESTION_PROMPT   ← rewrites follow-ups using chat history
+    ├→ Trend Analysis Agent
+    │   ├→ Data Aggregation Tool
+    │   ├→ Pattern Recognition Tool
+    │   └→ Insight Generation Tool
     │
-    ▼
-CLASSIFIER_PROMPT          ← picks the right retrieval tool
-    │
-    ▼
-Chroma Retriever (tool)    ← fetches semantically relevant docs
-    │
-    ▼
-RAG_RETRIEVAL_PROMPT       ← generates grounded answer from context
-    │
-    ▼
-REACT_AGENT_PROMPT         ← wraps with persona + tool rules
-    │
-    ▼
-NO_RESULT_PROMPT           ← fallback if retriever returns nothing
-    │
-    ▼
-Structured Output
+    └→ Response Synthesis
+        └→ Chat History Update
 ```
 
----
+## Key Features in Detail
 
-## 🔍 Data Sources
+### 1. Agentic Grant Research
+- Autonomous tool orchestration for grant discovery
+- Multi-step reasoning for complex eligibility analysis
+- Comparative analysis across funding bodies
 
-| Category | Sources |
-|---|---|
-| **Government (India)** | myscheme.gov.in, patenvue.com, infoapp.com, letmespread.com |
-| **International** | worldbank.org, undp.org, ec.europa.eu, oecd.org, erasmus-plus.ec.europa.eu |
-| **Startups** | ycombinator.com, techstars.com, startup.google.com, microsoft.com |
-| **Grants & Tenders** | mastersgrant.com, youthatlas.com, paperswithcode.com |
+### 2. Trend Intelligence
+- Emerging pattern detection in AI funding
+- Time-series analysis of grant trends
+- Sector-specific insights
 
----
+### 3. Persistent Context
+- SQLite-backed conversation history
+- Context retention across sessions
+- Query enrichment with historical data
 
-## 🚀 Getting Started
+### 4. Flexible Prompting
+- Dynamic prompt construction based on query type
+- Specialized templates for different grant categories
+- Few-shot examples for improved reasoning
 
-### 1. Clone the Repository
+## Development
+
+### Running Tests
 
 ```bash
-git clone https://github.com/masterharry9889/AI-Grant---Trends-Intelligence.git
-cd AI-Grant---Trends-Intelligence
+python -m pytest tests/
 ```
 
-### 2. Install Dependencies
+### Adding New Tools
 
-```bash
-pip install langchain langchain-community langchain-groq langchain-nvidia-ai-endpoints chromadb python-dotenv
-```
-
-### 3. Set Up Environment Variables
-
-Create a local `.env` file in the project root only for development. Do not commit it.
-
-```env
-GROQ_API_KEY=your_groq_api_key_here
-NVIDIA_API_KEY=your_nvidia_api_key_here
-```
-
-Get your keys from:
-- [Groq Console](https://console.groq.com/) — free tier available
-- [NVIDIA AI Endpoints](https://build.nvidia.com/) — free API credits available
-
-### 4. Build the Vector Store
-
-Before running the agent, ingest a grant source and index it into Chroma. Use `ingest.py`:
-
-```bash
-python ingest.py --url https://www.myscheme.gov.in/ --category government --max-depth 3
-```
-
-You can also ingest additional sources for categories like `nabard`, `dst`, `startup_india`, and `icar`.
-
-### 5. Run the Agent
-
-```bash
-python run_grant_agent.py
-```
-### 6. Streamlit UI
-
-Run the Streamlit interface:
-
-```bash
-streamlit run app.py
-```
-
-This UI lets you enter a query, populate a client profile, and generate both search results and a proposal outline.
-
-### 7. Scheduler
-
-Use the scheduler to refresh ingested sources on a daily cadence:
-
-```bash
-python scheduler.py
-```
-
-The scheduler will re-run defined ingestion jobs and keep the knowledge base from going stale.
-This will load the persisted vector store, create the GrantBot agent, and run a sample query:
-
+1. Define the tool in `Grant_agent.py`:
 ```python
-from Grant_agent import get_loader, tag_documents, build_vectorstore
-
-# Example: index government grants
-loader = get_loader("https://www.myscheme.gov.in/", max_depth=3)
-docs = loader.load()
-docs = tag_documents(docs, category="government", source_url="https://www.myscheme.gov.in/")
-
-vectorstore = build_vectorstore(docs)
-print("Vector store built and persisted to grant_db/")
+def grant_search_tool(query: str) -> str:
+    """Search grant databases"""
+    # Implementation
+    return results
 ```
 
-### 5. Run the Agent
-
-```bash
-python run_grant_agent.py
-```
-
-### 6. Install from requirements
-
-If you want to install the environment via the repository dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-This will load the persisted vector store, create the GrantBot agent, and run a sample query:
-
-> *"Find grants or funding opportunities for early-stage Indian startups working on clean energy or sustainability."*
-
----
-
-## 🧩 Using the Agent Programmatically
-
+2. Register with the agent:
 ```python
-from Grant_agent import create_agent, load_chat_history
-from run_grant_agent import load_vectorstore
-from pathlib import Path
-
-# Load persisted vectorstore
-vectorstore = load_vectorstore(Path("grant_db"))
-
-# Create the ReAct agent
-agent = create_agent(vectorstore)
-
-# Load chat history for multi-turn conversations
-history = load_chat_history(session_id="my_session")
-
-# Run a query
-response = agent.invoke({
-    "input": "What scholarships are available for Indian engineering students?",
-    "chat_history": []
-})
-
-print(response["output"])
+agent.add_tool(grant_search_tool)
 ```
 
----
+3. Update prompts in `prompts.py` to reference the new tool
 
-## 🛠️ Key Components
+### Code Style
 
-### `Grant_agent.py`
-
-| Function | Description |
-|---|---|
-| `get_loader(url, max_depth)` | Creates a `RecursiveUrlLoader` for scraping grant sources |
-| `tag_documents(docs, category, url)` | Attaches category and metadata before indexing |
-| `build_vectorstore(docs)` | Chunks documents and builds/persists a Chroma collection |
-| `build_retriever_tool(name, desc, retriever)` | Wraps a Chroma retriever as a LangChain Tool |
-| `build_tools(vectorstore)` | Creates one retriever tool per funding category |
-| `create_agent(vectorstore)` | Assembles the full ReAct AgentExecutor |
-| `load_chat_history(session_id)` | Returns a SQLite-backed chat history store |
-
-### `prompts.py`
-
-| Prompt | Purpose |
-|---|---|
-| `SYSTEM_PROMPT` | GrantBot's identity, tool guidance, and output format rules |
-| `REACT_AGENT_PROMPT` | Main agent reasoning template (Thought/Action/Observation) |
-| `CONDENSE_QUESTION_PROMPT` | Rewrites follow-up questions into standalone retrieval queries |
-| `RAG_RETRIEVAL_PROMPT` | Grounded answer generation from retrieved context |
-| `CLASSIFIER_PROMPT` | Routes query to the correct tool category |
-| `NO_RESULT_PROMPT` | Graceful fallback when retrieval returns nothing |
-
----
-
-## 🧪 Example Queries
-
-```
-"What government grants are available for women-led NGOs in India?"
-"Find international research funding from UNDP or World Bank for climate projects."
-"Are there any startup accelerators for EdTech companies in 2025?"
-"Show me IEEE or ACM conference funding opportunities for PhD students."
-"What scholarships are available from IITs or NITs for postgraduate students?"
+Follow PEP 8 conventions:
+```bash
+black .
+flake8 .
 ```
 
----
+## Performance Considerations
 
-## 🔧 Configuration
+- **Chat History**: Database queries are indexed on timestamp; consider archiving old chats
+- **Agent Iterations**: Configure `MAX_ITERATIONS` based on query complexity
+- **API Calls**: Use response caching to minimize redundant API calls
+- **Database Size**: Periodically vacuum `chat_history.db` for optimal performance
 
-You can modify the funding categories and their descriptions in `Grant_agent.py`:
+## Troubleshooting
 
-```python
-CATEGORY_MAP = {
-    "government": "Search Indian government grants from myscheme.gov.in and similar.",
-    "international": "Search international tenders from World Bank, UNDP, EU, OECD.",
-    "startup": "Search startup funding from YC, Techstars, Google for Startups.",
-    "research": "Search research funding from NSF, NIH, DARPA.",
-    "scholarship": "Search scholarships from IIT, IIM, NIT.",
-    "conference": "Search conference funding from ACM, IEEE, Google.",
-    "education": "Search education-related grants from Coursera, edX, Khan Academy.",
-}
+### Agent Timeouts
+- Increase `MAX_ITERATIONS` in `.env`
+- Check API rate limits
+- Verify network connectivity
+
+### Database Errors
+```bash
+# Reset chat history (backup first!)
+rm chat_history.db
+python run_grant_agent.py  # Will recreate the database
 ```
 
+### Missing API Keys
+- Verify `.env` file exists and is in the project root
+- Check that `ANTHROPIC_API_KEY` is set correctly
+- Ensure no trailing whitespace in `.env` values
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Contribution Areas
+- New grant data sources and integrations
+- Improved prompt engineering for better analysis
+- Additional agent tools and capabilities
+- Documentation and examples
+- Performance optimizations
+
+## Roadmap
+
+- [ ] Integration with major grant databases (NSF, NSERC, Horizon Europe)
+- [ ] Real-time grant notifications based on user preferences
+- [ ] Advanced analytics dashboard for grant trends
+- [ ] Multi-language support for international grants
+- [ ] Personalized recommendation engine
+- [ ] Grant application assistance and drafting tools
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact & Support
+
+- **Author**: [@masterharry9889](https://github.com/masterharry9889)
+- **Issues**: [GitHub Issues](https://github.com/masterharry9889/AI-Grant---Trends-Intelligence/issues)
+- **Portfolio**: [vermaaniket.vercel.app](https://vermaaniket.vercel.app)
+- **LinkedIn**: [linkedin.com/in/aniket-verma-2034a3294](https://linkedin.com/in/aniket-verma-2034a3294)
+
+## Acknowledgments
+
+- Built with [LangGraph](https://langchain-ai.github.io/langgraph/) for agentic workflows
+- Powered by [Anthropic Claude API](https://www.anthropic.com/)
+- Inspired by the need for better grant discovery and trend analysis in AI research
+
 ---
 
-## 📦 Tech Stack
-
-| Component | Technology |
-|---|---|
-| LLM | Groq — LLaMA 3.1 8B Instant |
-| Embeddings | NVIDIA — llama-nemotron-embed-1b-v2 |
-| Vector Store | ChromaDB (persistent) |
-| Agent Framework | LangChain ReAct Agent |
-| Web Scraping | LangChain `RecursiveUrlLoader` |
-| Chat Memory | SQLite via `SQLChatMessageHistory` |
-| Environment | Python 3.10+ |
-
----
-
-## 🔒 Important Notes
-
-- The `.env` file is committed to this repo for reference — **replace with your own API keys before running**.
-- The `chat_history.db` and `grant_db/` are local files and will grow as you index more sources and have more conversations.
-- This project uses `langchain_classic` — ensure you have the correct version of LangChain installed that includes this module.
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Streamlit UI for a browser-based chat interface
-- [ ] Scheduled scraping to keep the vector store up to date
-- [ ] Email alerts for newly indexed opportunities matching saved queries
-- [ ] Support for PDF grant documents (e.g. RFP/RFQ attachments)
-- [ ] LangGraph migration for more robust multi-agent orchestration
-
----
-
-## 👤 Author
-
-**Aniket Verma**
-AI/ML Engineer | B.Tech CSE, AKTU
-[GitHub](https://github.com/masterharry9889) · [LinkedIn](https://linkedin.com/in/aniket-verma-2034a3294) · [Portfolio](https://vermaaniket.vercel.app)
-
----
-
-## 📄 License
-
-This project is open-source. Feel free to fork, extend, and build on it.
+**Note**: This project is actively maintained. For the latest updates and features, visit the [GitHub repository](https://github.com/masterharry9889/AI-Grant---Trends-Intelligence).
