@@ -32,12 +32,17 @@ GrantBot will search its vector knowledge base, reason through the most relevant
 ```
 AI-Grant---Trends-Intelligence/
 │
-├── Grant_agent.py        # Core agent: vectorstore builder, retriever tools, agent factory
+├── Grant_agent.py        # Core agent: vectorstore builder, retrieval tools, agent factory
 ├── run_grant_agent.py    # Runner: loads vectorstore and runs a sample agent query
-├── prompts.py            # All prompt templates (system, ReAct, RAG, classifier, fallback)
+├── prompts.py            # Prompt templates (system, ReAct, RAG, classifier, proposal)
+├── ingest.py             # Command-line ingestion helper for new grant sources
+├── app.py                # Streamlit UI for GrantBot and proposal generation
+├── scheduler.py          # Refresh schedule for periodic re-ingestion
 ├── grant_db/             # Persisted Chroma vector store
-├── chat_history.db       # SQLite conversation history
-└── .env                  # API keys (GROQ_API_KEY, NVIDIA_API_KEY)
+├── chat_history.db       # SQLite conversation history (local only)
+├── requirements.txt      # Python dependencies
+├── .env.example          # Example environment variable template
+└── .env                  # API keys (GROQ_API_KEY, NVIDIA_API_KEY) local only
 ```
 
 ---
@@ -125,7 +130,25 @@ You can also ingest additional sources for categories like `nabard`, `dst`, `sta
 ```bash
 python run_grant_agent.py
 ```
+### 6. Streamlit UI
 
+Run the Streamlit interface:
+
+```bash
+streamlit run app.py
+```
+
+This UI lets you enter a query, populate a client profile, and generate both search results and a proposal outline.
+
+### 7. Scheduler
+
+Use the scheduler to refresh ingested sources on a daily cadence:
+
+```bash
+python scheduler.py
+```
+
+The scheduler will re-run defined ingestion jobs and keep the knowledge base from going stale.
 This will load the persisted vector store, create the GrantBot agent, and run a sample query:
 
 ```python

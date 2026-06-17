@@ -7,27 +7,10 @@ GrantBot agent from Grant_agent.py, and run a simple user query.
 
 from pathlib import Path
 
-from Grant_agent import create_agent, create_nvidia_embeddings, format_chat_history, load_chat_history
+from Grant_agent import create_agent, format_chat_history, load_chat_history, load_vectorstore
 
 
 PERSIST_DIRECTORY = Path("grant_db")
-
-
-def load_vectorstore(persist_directory: Path):
-    """Load an existing Chroma vector store from disk."""
-    try:
-        from langchain_community.vectorstores import Chroma
-    except ImportError as exc:
-        raise ImportError(
-            "langchain_community is required to load the persisted vector store. "
-            "Install it before running this script."
-        ) from exc
-
-    return Chroma(
-        persist_directory=str(persist_directory),
-        collection_name="grants_tenders",
-        embedding_function=create_nvidia_embeddings(),
-    )
 
 
 def main() -> None:

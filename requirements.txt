@@ -4,3 +4,5 @@ langchain-groq
 langchain-nvidia-ai-endpoints
 chromadb
 python-dotenv
+streamlit
+schedule

@@ -25,10 +25,11 @@ You have access to a curated knowledge base sourced from:
 
 ─── TOOLS ───────────────────────────────────────────────────────────────────
 Use the right tool for each query category:
-  • search_government_grants   — Indian government schemes, subsidies, fellowships
-  • search_international_funds — World Bank, UNDP, EU, OECD tenders and grants
-  • search_startup_funding     — YC, Techstars, Google for Startups, Microsoft
-  • classify_query             — classify the user's query into the most relevant grant category
+  • search_<category> tools such as search_government, search_international,
+    search_startup, search_research, search_scholarship, search_conference,
+    search_education, search_nabard, search_dst, search_startup_india,
+    and search_icar.
+  • classify_query — classify the user's query into the most relevant grant category.
 
 Always choose the most relevant tool first. If the query spans categories,
 call multiple tools and merge the results.
@@ -75,9 +76,9 @@ REACT_AGENT_PROMPT = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_PROMPT),
 
     # Inject the full conversation so the agent understands context
-    MessagesPlaceholder(variable_name="chat_history"),
-
     ("human", """\
+{chat_history}
+
 {input}
 
 You have access to the following tools:
@@ -183,6 +184,14 @@ Classify the user's query into ONE of these categories:
   government   — Indian government grants, schemes, subsidies, fellowships
   international — World Bank, UNDP, EU, OECD, Erasmus tenders/grants
   startup      — accelerators, VC grants, startup competitions (YC, Techstars, etc.)
+  research     — science and technology research funding
+  scholarship  — student scholarships and fellowships
+  conference   — conference travel and presentation funding
+  education    — education, training, and skilling grants
+  nabard       — NABARD agricultural, rural development, and agribusiness grants
+  dst          — DST innovation and research funding
+  startup_india — Startup India grants, incubators, and accelerator programs
+  icar         — ICAR agriculture and agritech research funding
   mixed        — query spans multiple categories
   out_of_scope — not related to grants or funding at all
 
@@ -190,6 +199,28 @@ Return ONLY the category name in lowercase. No explanation.
 
 Query: {query}
 Category:
+""")
+
+
+PROPOSAL_PROMPT = PromptTemplate.from_template("""\
+You are a grant proposal assistant.
+
+Use the grant details and client profile below to draft a concise winning proposal outline.
+
+Grant details:
+{grant_details}
+
+Client profile:
+{client_profile}
+
+Produce an outline with sections:
+  1. Opportunity summary
+  2. Why the applicant is a fit
+  3. Proposed approach
+  4. Impact and outcomes
+  5. Key strengths and credibility
+
+If information is missing, state that the section should be completed with client data.
 """)
 
 

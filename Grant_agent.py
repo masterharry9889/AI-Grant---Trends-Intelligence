@@ -5,13 +5,14 @@ Grant_agent.py — Agent orchestration for GrantBot
 from __future__ import annotations
 
 import os
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 
-from prompts import CLASSIFIER_PROMPT, REACT_AGENT_PROMPT
+from prompts import CLASSIFIER_PROMPT, PROPOSAL_PROMPT, REACT_AGENT_PROMPT
 
 from langchain_classic.agents import AgentExecutor
 from langchain_classic.agents import create_react_agent
@@ -63,6 +64,11 @@ def create_nvidia_embeddings() -> NVIDIAEmbeddings:
     )
 
 
+def create_groq_model() -> ChatGroq:
+    """Create a Groq chat model with explicit API key validation."""
+    return ChatGroq(model="llama-3.3-70b-versatile", api_key=get_required_env("GROQ_API_KEY"))
+
+
 def get_loader(url: str, max_depth: int = 3) -> RecursiveUrlLoader:
     """Create a web page loader for grant and funding sources."""
     return RecursiveUrlLoader(url=url, max_depth=max_depth)
@@ -75,6 +81,17 @@ def tag_documents(documents: list[Any], category: str, source_url: str) -> list[
         document.metadata["source_url"] = source_url
         document.metadata["last_scraped"] = datetime.now(timezone.utc).isoformat()
     return documents
+
+
+def load_vectorstore(persist_directory: Path = PERSIST_DIRECTORY) -> Chroma:
+    """Load an existing persisted Chroma vector store."""
+    from langchain_community.vectorstores import Chroma
+
+    return Chroma(
+        persist_directory=str(persist_directory),
+        collection_name="grants_tenders",
+        embedding_function=create_nvidia_embeddings(),
+    )
 
 
 def build_vectorstore(raw_documents: list[Any], persist_directory: Path = PERSIST_DIRECTORY) -> Chroma:
@@ -91,7 +108,68 @@ def build_vectorstore(raw_documents: list[Any], persist_directory: Path = PERSIS
         persist_directory=str(persist_directory),
         collection_name="grants_tenders",
     )
+    vectorstore.persist()
     return vectorstore
+
+
+@dataclass
+class ClientProfile:
+    organization: str = ""
+    contact_name: str = ""
+    stage: str = "early-stage"
+    industry: str = ""
+    location: str = "India"
+    team_size: str = ""
+    funding_need: str = ""
+    focus_areas: str = ""
+    beneficiaries: str = ""
+    impact_goals: str = ""
+    experience: str = ""
+
+    def format(self) -> str:
+        profile = asdict(self)
+        return "\n".join(
+            f"{key.replace('_', ' ').title()}: {value or 'Not specified'}"
+            for key, value in profile.items()
+        )
+
+
+def match_profile_to_categories(profile: ClientProfile) -> list[str]:
+    """Recommend grant categories based on a client profile."""
+    categories: list[str] = []
+    industry = profile.industry.lower()
+    stage = profile.stage.lower()
+    focus = profile.focus_areas.lower()
+    beneficiaries = profile.beneficiaries.lower()
+
+    if "startup" in stage or "startup" in industry or "incubator" in focus:
+        categories.extend(["startup", "startup_india"])
+    if "research" in stage or "research" in industry or "innovation" in focus:
+        categories.extend(["research", "dst"])
+    if "agri" in industry or "farm" in beneficiaries or "rural" in focus:
+        categories.extend(["nabard", "icar", "government"])
+    if "international" in focus or "world bank" in beneficiaries or "undp" in focus:
+        categories.append("international")
+    if "education" in focus or "scholarship" in beneficiaries:
+        categories.append("scholarship")
+    if not categories:
+        categories.append("government")
+    return list(dict.fromkeys(categories))
+
+
+def generate_proposal(grant_summary: str, profile: ClientProfile, model: ChatGroq | None = None) -> str:
+    """Generate a proposal outline based on grant details and client profile."""
+    if model is None:
+        model = create_groq_model()
+    chain = LLMChain(llm=model, prompt=PROPOSAL_PROMPT)
+    result = chain.invoke(
+        {
+            "grant_details": grant_summary,
+            "client_profile": profile.format(),
+        },
+        return_only_outputs=True,
+    )
+    return _extract_text_from_chain_output(result)
 
 
 def build_retriever_tool(name: str, description: str, retriever: Any) -> Tool:
@@ -112,12 +190,32 @@ def build_retriever_tool(name: str, description: str, retriever: Any) -> Tool:
     return Tool(name=name, description=description, func=search)
 
 
+def _extract_text_from_chain_output(output: Any) -> str:
+    """Extract a single text string from LLMChain outputs."""
+    if isinstance(output, str):
+        return output
+    if isinstance(output, dict):
+        if "output" in output and isinstance(output["output"], str):
+            return output["output"]
+        if "text" in output and isinstance(output["text"], str):
+            return output["text"]
+        text_values = [value for value in output.values() if isinstance(value, str)]
+        if len(text_values) == 1:
+            return text_values[0]
+        raise RuntimeError(
+            "Could not extract text from chain output. "
+            f"Chain returned keys: {list(output.keys())}"
+        )
+    raise TypeError(f"Unsupported chain output type: {type(output).__name__}")
+
+
 def classify_query(query: str, model: ChatGroq | None = None) -> str:
     """Use the classifier prompt to route queries to the right grant category."""
     if model is None:
-        model = ChatGroq(model="llama-3.1-8b-instant")
+        model = create_groq_model()
     chain = LLMChain(llm=model, prompt=CLASSIFIER_PROMPT)
-    return chain.invoke({"query": query}).strip().lower()
+    result = chain.invoke({"query": query}, return_only_outputs=True)
+    return _extract_text_from_chain_output(result).strip().lower()
 
 
 def format_chat_history(chat_history: SQLChatMessageHistory) -> str:
@@ -173,7 +271,7 @@ def build_tools(vectorstore: Chroma, model: ChatGroq | None = None) -> list[Tool
 def create_agent(vectorstore: Chroma, model: ChatGroq | None = None) -> AgentExecutor:
     """Create the React agent using the prompt defined in prompts.py."""
     if model is None:
-        model = ChatGroq(model="llama-3.1-8b-instant")
+        model = create_groq_model()
 
     tools = build_tools(vectorstore, model=model)
     agent = create_react_agent(llm=model, tools=tools, prompt=REACT_AGENT_PROMPT)
