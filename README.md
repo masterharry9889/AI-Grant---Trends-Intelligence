@@ -99,7 +99,7 @@ pip install langchain langchain-community langchain-groq langchain-nvidia-ai-end
 
 ### 3. Set Up Environment Variables
 
-Create a `.env` file in the project root:
+Create a local `.env` file in the project root only for development. Do not commit it.
 
 ```env
 GROQ_API_KEY=your_groq_api_key_here
@@ -112,7 +112,21 @@ Get your keys from:
 
 ### 4. Build the Vector Store
 
-Before running the agent, you need to scrape and index the grant sources. In a Python script or notebook:
+Before running the agent, ingest a grant source and index it into Chroma. Use `ingest.py`:
+
+```bash
+python ingest.py --url https://www.myscheme.gov.in/ --category government --max-depth 3
+```
+
+You can also ingest additional sources for categories like `nabard`, `dst`, `startup_india`, and `icar`.
+
+### 5. Run the Agent
+
+```bash
+python run_grant_agent.py
+```
+
+This will load the persisted vector store, create the GrantBot agent, and run a sample query:
 
 ```python
 from Grant_agent import get_loader, tag_documents, build_vectorstore
@@ -130,6 +144,14 @@ print("Vector store built and persisted to grant_db/")
 
 ```bash
 python run_grant_agent.py
+```
+
+### 6. Install from requirements
+
+If you want to install the environment via the repository dependencies:
+
+```bash
+pip install -r requirements.txt
 ```
 
 This will load the persisted vector store, create the GrantBot agent, and run a sample query:

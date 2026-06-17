@@ -1,0 +1,7 @@
+.env
+*.db
+*.sqlite3
+grants_tenders
+grant_db/
+.venv/
+__pycache__/

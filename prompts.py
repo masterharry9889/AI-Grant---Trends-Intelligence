@@ -28,6 +28,7 @@ Use the right tool for each query category:
   • search_government_grants   — Indian government schemes, subsidies, fellowships
   • search_international_funds — World Bank, UNDP, EU, OECD tenders and grants
   • search_startup_funding     — YC, Techstars, Google for Startups, Microsoft
+  • classify_query             — classify the user's query into the most relevant grant category
 
 Always choose the most relevant tool first. If the query spans categories,
 call multiple tools and merge the results.
@@ -82,7 +83,7 @@ REACT_AGENT_PROMPT = ChatPromptTemplate.from_messages([
 You have access to the following tools:
 {tools}
 
-Use this exact format for every reasoning step:
+Use this exact format for every reasoning step when you are calling a tool:
 
 Thought: <what you need to do and why>
 Action: <tool name — must be one of [{tool_names}]>
@@ -90,6 +91,13 @@ Action Input: <the exact search query to pass to the tool>
 Observation: <result returned by the tool>
 
 Repeat Thought / Action / Action Input / Observation as many times as needed.
+
+If you need to ask the user a clarification question or you do not need a tool call,
+respond with:
+
+Thought: I need more information to answer.
+Final Answer: <your clarifying question>
+
 When you have enough information to answer, write:
 
 Thought: I now have enough information to answer.

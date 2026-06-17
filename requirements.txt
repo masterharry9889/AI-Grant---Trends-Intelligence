@@ -1,0 +1,6 @@
+langchain-classic
+langchain-community
+langchain-groq
+langchain-nvidia-ai-endpoints
+chromadb
+python-dotenv
